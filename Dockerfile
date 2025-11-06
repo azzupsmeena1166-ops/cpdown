@@ -1,21 +1,21 @@
-# Use a lightweight official Python image (includes pip already)
-FROM python:3.12-slim
+FROM ubuntu:latest
+
+# Install dependencies
+RUN apt-get update -y && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv gcc libffi-dev musl-dev ffmpeg aria2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
+COPY . /app/
 
-# Install any system dependencies you need
-RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    gcc libffi-dev ffmpeg aria2 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Create and activate a virtual environment to bypass PEP 668 restrictions
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy your application code
-COPY . /app
+# Install dependencies safely inside venv
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --upgrade -r Installer
 
-# Install Python dependencies safely
-RUN pip install --no-cache-dir --upgrade -r Installer
-
-# Set the default command to run your app
-CMD ["python", "modules/main.py"]
-
-
+CMD ["python3", "main.py"]
